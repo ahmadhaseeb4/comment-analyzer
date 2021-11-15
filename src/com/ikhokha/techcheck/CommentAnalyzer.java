@@ -1,5 +1,8 @@
 package com.ikhokha.techcheck;
 
+import com.ikhokha.techcheck.factory.DataPool;
+import com.ikhokha.techcheck.factory.Task;
+
 import java.io.BufferedReader;
 import java.io.File;
 import java.io.FileNotFoundException;
@@ -17,27 +20,22 @@ public class CommentAnalyzer {
 	}
 	
 	public Map<String, Integer> analyze() {
-		
 		Map<String, Integer> resultsMap = new HashMap<>();
+		//This method prepares the 'data' map in 'DataPool' class with initial data before running conditionals
+		DataPool.loadTasksInDataPool();
 		
 		try (BufferedReader reader = new BufferedReader(new FileReader(file))) {
 			
 			String line = null;
 			while ((line = reader.readLine()) != null) {
-				
-				if (line.length() < 15) {
-					
-					incOccurrence(resultsMap, "SHORTER_THAN_15");
 
-				} else if (line.contains("Mover")) {
-
-					incOccurrence(resultsMap, "MOVER_MENTIONS");
-				
-				} else if (line.contains("Shaker")) {
-
-					incOccurrence(resultsMap, "SHAKER_MENTIONS");
-				
+				//going through each entry in the 'data' map in 'DataPool' class and incrementing count based on metric
+				for (Map.Entry<String, Task> data: DataPool.data.entrySet()){
+					if (data.getValue().Contains(line)) {
+						incOccurrence(data.getKey(), resultsMap);
+					}
 				}
+
 			}
 			
 		} catch (FileNotFoundException e) {
@@ -47,7 +45,7 @@ public class CommentAnalyzer {
 			System.out.println("IO Error processing file: " + file.getAbsolutePath());
 			e.printStackTrace();
 		}
-		
+
 		return resultsMap;
 		
 	}
@@ -57,10 +55,11 @@ public class CommentAnalyzer {
 	 * @param countMap the map that keeps track of counts
 	 * @param key the key for the value to increment
 	 */
-	private void incOccurrence(Map<String, Integer> countMap, String key) {
-		
+	private void incOccurrence(String key, Map<String, Integer> countMap) {
+
 		countMap.putIfAbsent(key, 0);
 		countMap.put(key, countMap.get(key) + 1);
+
 	}
 
 }
